@@ -1,0 +1,1507 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Империя</title>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:#12151c;color:#e8e6df;font-family:Segoe UI,Arial,sans-serif}
+h1{text-align:center;letter-spacing:4px;margin:0 0 18px;font-size:28px}
+#menu{max-width:960px;margin:0 auto;padding:30px 16px}
+.wrap{display:flex;gap:20px;flex-wrap:wrap}
+.panel{background:#1c212c;border:2px solid #3a4152;border-radius:10px;padding:18px}
+.left{flex:2 1 460px}.right{flex:1 1 260px;display:flex;flex-direction:column;gap:16px}
+.row{display:flex;gap:16px}
+.flag{width:96px;height:96px;border:3px solid #e8e6df;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:44px;flex:none;background:#c0392b}
+.fields{flex:1;display:flex;flex-direction:column;gap:10px}
+label{font-size:12px;color:#9aa3b5;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:3px}
+input,select{width:100%;padding:9px 10px;background:#12151c;color:#e8e6df;border:1px solid #3a4152;border-radius:6px;font-size:15px}
+button{padding:11px 16px;background:#34507a;color:#fff;border:0;border-radius:6px;font-size:15px;cursor:pointer;font-weight:600}
+button:hover:not(:disabled){background:#4366a0}button:disabled{opacity:.45;cursor:default}
+.colors{display:flex;gap:10px;margin-top:4px}
+.sw{width:42px;height:42px;border-radius:50%;border:3px solid transparent;cursor:pointer;padding:0}
+.sw.on{border-color:#fff}
+.box{background:#12151c;border:1px solid #3a4152;border-radius:8px;padding:14px}
+.box h3{margin:0 0 10px;font-size:16px}
+.idrow{display:flex;gap:6px;margin-top:10px}
+.idrow input{font-family:monospace}
+#status{margin-top:10px;font-size:13px;color:#e0b050;min-height:18px}
+#ideoDesc,#relDesc{font-size:12px;color:#9aa3b5;margin-top:4px;min-height:16px}
+#game{display:none;position:fixed;inset:0;overflow:hidden;background:#0c0e13}
+#hud{position:absolute;top:8px;left:8px;right:8px;z-index:2;display:flex;gap:10px;justify-content:space-between;pointer-events:none}
+.pc{flex:0 1 340px;background:rgba(28,33,44,.88);border:2px solid #3a4152;border-radius:8px;padding:8px;display:flex;gap:10px;align-items:center;min-width:0;overflow:hidden}
+.pc.act{border-color:#e0b050}
+.pc .flag{width:48px;height:48px;font-size:22px;border-width:2px}
+.pc small{color:#9aa3b5;display:block}
+#bar{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);z-index:2;max-width:calc(100% - 16px);display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;background:rgba(28,33,44,.9);border:2px solid #3a4152;border-radius:10px;padding:8px 12px}
+#bar button{padding:8px 11px}
+#turn{font-weight:700;font-size:14px}
+#log{position:absolute;top:84px;left:10px;z-index:2;max-width:min(420px,50vw);font-size:13px;color:#dfe3ee;text-shadow:0 1px 3px #000;white-space:pre-line;pointer-events:none}#log:empty{display:none}
+.sp{padding:8px 11px}.sp.on{background:#e0b050;color:#12151c}
+#cv{position:absolute;inset:0;z-index:1;width:100%;height:100%;touch-action:none;cursor:grab;background:#0c0e13;border:0;display:block}
+#loading{display:none;position:fixed;inset:0;background:rgba(10,12,18,.88);z-index:30;align-items:center;justify-content:center;font-size:26px;font-weight:700;letter-spacing:1px}
+#over{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);align-items:center;justify-content:center;flex-direction:column;gap:20px;z-index:9}
+#over div{font-size:34px;font-weight:800;text-align:center;padding:0 20px}
+.help{font-size:12px;color:#9aa3b5;margin-top:8px;line-height:1.5}
+#flagPrev{width:100%;aspect-ratio:3/2;border:3px solid #e8e6df;border-radius:6px;background:#12151c;display:block}
+.fl{width:72px;height:48px;border:2px solid #e8e6df;border-radius:4px;flex:none}
+.fc{font-size:12px;color:#9aa3b5;display:flex;flex-direction:column;align-items:center;gap:3px}
+.fc input{width:48px;height:34px;padding:2px;cursor:pointer}
+.fed{background:#12151c;border:1px solid #3a4152;border-radius:8px;padding:10px}
+#screenMain{max-width:520px;margin:0 auto}
+.mainbtns{display:flex;flex-direction:column;gap:16px}
+.big{width:100%;padding:20px 16px;font-size:20px;letter-spacing:1px;background:#1c212c;border:2px solid #3a4152}
+.big:hover:not(:disabled){background:#2a3246}
+.bigbox{display:flex;flex-direction:column;gap:8px}
+#screenEditor{max-width:1100px;margin:0 auto}
+.edtop{display:flex;gap:22px;flex-wrap:wrap}
+.edleft{flex:0 0 240px;display:flex;flex-direction:column;gap:10px}
+.edright{flex:1 1 420px;display:flex;flex-direction:column;gap:12px}
+.photobox{position:relative;width:100%;aspect-ratio:4/5;border:3px solid #e8e6df;border-radius:6px;background:#12151c;display:flex;align-items:center;justify-content:center;color:#9aa3b5;font-size:13px;text-align:center;overflow:hidden}
+.photobox img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none}
+.edtitle{margin:24px 0 10px;font-size:16px;letter-spacing:1px}
+.cmdrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.cmd{background:#1c212c;border:2px solid #3a4152;border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:8px}
+.cmd.adm{border-color:#4a7fb5}
+.cmd .head{font-weight:700;font-size:13px;letter-spacing:1px;min-height:38px;display:flex;align-items:center}
+.cpick{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.cpick input[type=color]{width:64px;height:44px;padding:2px;cursor:pointer}
+#colorPlate{width:120px;height:44px;border:2px solid #e8e6df;border-radius:6px}
+.cvals{font-family:monospace;font-size:14px;display:flex;flex-direction:column;gap:2px}
+details.fed summary{cursor:pointer;font-weight:600}
+.pc .lp{width:48px;height:48px;object-fit:cover;border:2px solid #e8e6df;border-radius:4px;flex:none}
+#pauseMenu{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:25;align-items:center;justify-content:center}
+.pm{background:#1c212c;border:2px solid #3a4152;border-radius:12px;padding:24px;width:min(420px,92vw);display:flex;flex-direction:column;gap:14px}
+.pm h2{margin:0;text-align:center;letter-spacing:3px}
+</style>
+</head>
+<body>
+
+<div id="menu">
+  <h1>ИМПЕРИЯ</h1>
+  <div id="screenMain">
+    <div class="mainbtns">
+      <button id="btnSettings" class="big">НАСТРОЙКИ СТРАНЫ</button>
+      <div class="help" id="summary" style="margin:-6px 0 0;text-align:center"></div>
+      <div class="bigbox">
+        <button id="btnCreate" class="big">СОЗДАТЬ ЛОББИ</button>
+        <div class="idrow" id="idBox" style="display:none"><input id="myId" readonly><button id="btnCopy">Копия</button></div>
+        <div class="help" id="hostHelp" style="display:none">Отправьте этот ID второму игроку и дождитесь подключения.</div>
+      </div>
+      <div class="bigbox">
+        <button id="btnJoinOpen" class="big">ЗАЙТИ В ЛОББИ</button>
+        <div id="joinBox" style="display:none">
+          <input id="joinId" placeholder="ID лобби, например hex-ab12c" autocomplete="off">
+          <button id="btnJoin" style="width:100%;margin-top:8px">ПОДКЛЮЧИТЬСЯ</button>
+        </div>
+      </div>
+      <div class="box">
+        <h3>Игра с ботом</h3>
+        <select id="botLvl"><option value="0">Лёгкий</option><option value="1" selected>Средний</option><option value="2">Сложный</option></select>
+        <button id="btnBot" style="width:100%;margin-top:10px">ИГРАТЬ С БОТОМ</button>
+      </div>
+      <button id="btnReset" class="big">🗑️ Сбросить сохранение / Новая игра</button>
+      <div id="status"></div>
+    </div>
+    <div class="help" style="margin-top:14px">
+    Карта: около 11 тысяч провинций (140×78). Океаны и моря непроходимы без флота, а сухопутный путь между странами всегда гарантирован.<br>Правила (реальное время, как в Hearts of Iron): время идёт само. Пробел — пауза, клавиши 1–5 — скорость (управлять временем могут оба игрока). Выберите свою провинцию с армией ≥ 2 и кликните по любой другой: дивизия (кроме 1 бойца гарнизона) пойдёт туда по путям сообщения через ваши земли и атакует по прибытии. Правый клик или Shift+клик — отправить армию в свою провинцию. Подкрепление приходит каждые 8 дней.
+    Рельеф на карте: горы — контурные линии (защита ×1.5), лес — точечная штриховка (×1.25), форт — вложенные контуры (×2, +2 армии за ход). Войска показаны значками (пехота, кавалерия, артиллерия) с силой под ними; наведите курсор на провинцию, чтобы увидеть гарнизон. Побеждает тот, кто захватит все провинции врага. Карта: колесо — зум к курсору, зажатое колесо (средняя кнопка) или левая кнопка — перетаскивание, WASD/стрелки — сдвиг (в полноэкранном режиме ещё и мышь у края экрана); на телефоне — щипок и свайп.
+  </div>
+  </div>
+
+  <div id="screenEditor" style="display:none">
+    <div class="edtop">
+      <div class="edleft">
+        <canvas id="flagPrev" width="300" height="200"></canvas>
+        <div class="photobox"><img id="leaderImg" alt=""><span id="leaderPh">ФОТО ЛИДЕРА</span></div>
+        <button id="btnLeaderPhoto" type="button">Загрузить фото…</button>
+        <input id="cLeader" maxlength="28" placeholder="Имя лидера">
+      </div>
+      <div class="edright">
+        <div><label>Название страны</label><input id="cName" maxlength="28" placeholder="Например: Новая Эрландия"></div>
+        <div><label>Название звания главы (лидера)</label><input id="cTitle" maxlength="24" placeholder="Император, Президент, Канцлер…"></div>
+        <div><label>Идеология</label><select id="cIdeo"></select><div id="ideoDesc"></div></div>
+        <div>
+          <label>Цвет государства (на карте)</label>
+          <div class="cpick">
+            <input type="color" id="countryColorPicker" value="#7a2e3a">
+            <div id="colorPlate"></div>
+            <div class="cvals"><span id="colorHex"></span><span id="colorRgb"></span></div>
+          </div>
+        </div>
+        <div><label>Столица</label><input id="cCapital" maxlength="28" placeholder="Название столицы"></div>
+        <div><label>Вера</label><select id="religionSelect"></select><div id="relDesc"></div></div>
+        <details class="fed">
+          <summary>Редактор флага</summary>
+          <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px">
+            <select id="fPat" style="flex:2 1 170px"></select>
+            <select id="fEm" style="flex:1 1 120px"></select>
+          </div>
+          <div class="row" style="gap:12px;margin-top:10px;align-items:flex-end;flex-wrap:wrap">
+            <span class="fc">Фон<input type="color" id="fC1" value="#c0392b"></span>
+            <span class="fc">Узор<input type="color" id="fC2" value="#f5f5f5"></span>
+            <span class="fc">Акцент<input type="color" id="fC3" value="#1c3f94"></span>
+            <button type="button" id="btnRnd" style="margin-left:auto">🎲 Случайный</button>
+          </div>
+        </details>
+      </div>
+    </div>
+    <h3 class="edtitle">КОМАНДУЮЩИЕ</h3>
+    <div class="cmdrow" id="cmdRow"></div>
+    <div style="text-align:center;margin-top:18px"><button id="btnBack" class="big" style="max-width:360px">ГОТОВО</button></div>
+  </div>
+</div>
+
+<div id="game">
+  <div id="hud"></div>
+  <div id="bar"><div id="turn"></div><button id="bPause" title="Пауза (Пробел)">⏸</button><span id="spd" style="display:flex;gap:4px"></span><button id="zIn" title="Приблизить">＋</button><button id="zOut" title="Отдалить">－</button><button id="zHome">Моя база</button><button id="zAll">Вся карта</button><button id="bFull" title="Полный экран (F)">⛶</button><button id="bMenu" title="Меню">☰ Меню</button></div>
+  <div id="log"></div>
+  <canvas id="cv"></canvas>
+</div>
+<div id="loading">Генерация карты…</div>
+<div id="pauseMenu">
+  <div class="pm">
+    <h2>МЕНЮ</h2>
+    <button id="btnContinue" class="big">▶ ПРОДОЛЖИТЬ</button>
+    <button id="btnReset2" class="big">🗑️ Сбросить сохранение / Новая игра</button>
+    <div class="help" id="saveInfo">Автосохранение каждые 10 игровых дней.</div>
+  </div>
+</div>
+<div id="over"><div id="overTxt"></div><button onclick="location.reload()">В главное меню</button></div>
+
+<script>
+'use strict';
+/* ====== КОНФИГ СЕТИ ====== */
+const ICE_SERVERS = [
+  { urls: 'stun:stun.l.google.com:19302' },
+  { urls: 'stun:stun1.l.google.com:19302' },
+  { urls: 'stun:free.expressturn.com:3478' },
+  { urls: 'turn:free.expressturn.com:3478', username: '000000002107680168', credential: 'awMR8kLni53za34v+59BcGGGkzc=' },
+  { urls: 'turn:free.expressturn.com:3478?transport=tcp', username: '000000002107680168', credential: 'awMR8kLni53za34v+59BcGGGkzc=' }
+];
+const PEER_CFG = { config: { iceServers: ICE_SERVERS } };
+
+/* ====== ДАННЫЕ ====== */
+const COLORS = ['#7a2e3a', '#2b4570', '#2f5d46', '#a67c2e']; // винный, тёмно-синий, глубокий зелёный, охра
+// Идеологии. fx — реально работающий эффект; у остальных пока нет эффекта.
+const IDEO = [
+  { name: 'Абсолютная Монархия', fx: 'defense', desc: 'Оборона своих провинций ×1.25' },
+  { name: 'Теократический Орден', desc: 'Пока без эффекта' },
+  { name: 'Аристократическая Олигархия', desc: 'Пока без эффекта' },
+  { name: 'Промышленная Республика', fx: 'reinf', desc: '+2 армии к подкреплению каждый цикл' },
+  { name: 'Конституционная Монархия', desc: 'Пока без эффекта' },
+  { name: 'Технократическая Диктатура', desc: 'Пока без эффекта' },
+  { name: 'Военная Хунта', fx: 'attack', desc: 'Сила атаки ×1.25' },
+  { name: 'Ультра-Национализм', desc: 'Пока без эффекта' },
+  { name: 'Революционный Социализм', fx: 'capture', desc: 'Захваченная провинция получает +1 армию' },
+  { name: 'Анархо-Синдикализм', desc: 'Пока без эффекта' },
+  { name: 'Федеративный Пакт', desc: 'Пока без эффекта' }
+];
+const ideoFx = p => IDEO[G.players[p].ideo].fx;
+const hexRgb = h => { const n = parseInt(h.slice(1), 16); return [n >> 16, n >> 8 & 255, n & 255]; };
+const cDist = (a, b) => { const x = hexRgb(a), y = hexRgb(b); return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]); };
+const farColor = ref => COLORS.reduce((b, c) => cDist(c, ref) > cDist(b, ref) ? c : b);
+// Религии: пока только выбор и описание — на механику игры не влияют.
+const REL = [
+  { name: 'Православие', short: 'Православие', eff: '+20% Защита на своей территории, +15% Лояльность населения, -10% Скорость исследований' },
+  { name: 'Католицизм', short: 'Католицизм', eff: '+25% Дипломатические отношения, +10% Золото от торговли, Папский союз при войне с иноверцами' },
+  { name: 'Протестантизм', short: 'Протестантизм', eff: '+20% Производство заведений/заводов, +15% Приток рекрутов, -10% Дипломатия с иноверцами' },
+  { name: 'Ислам', short: 'Ислам', eff: '+25% Мораль войск при атаке, +20% Стойкость кавалерии, Идеология Священной войны' },
+  { name: 'Конфуцианство', short: 'Конфуцианство', eff: '-30% Стоимость построек, +25% Стабильность, -15% Военный урон за рубежом' },
+  { name: 'Буддизм', short: 'Буддизм', eff: '-50% Усталость от войны, +20% Защита, Блокировка жестких законов мобилизации' },
+  { name: 'Секуляризм (Светское государство)', short: 'Секуляризм', eff: '+30% Скорость исследований, +20% Доход от заводов, -25% Мораль против религиозных фанатиков' }
+];
+const TER = [
+  { n: 'Равнина', def: 1,    col: '#a39e86' },
+  { n: 'Лес',     def: 1.25, col: '#8a9170' },
+  { n: 'Горы',    def: 1.5,  col: '#948f84' },
+  { n: 'Форт',    def: 2,    col: '#a0967f' },
+  { n: 'Океан',   def: 999,  col: '#24577a' },
+  { n: 'Море',    def: 999,  col: '#397b9e' }
+];
+const CAP = 99;
+const SPEEDS = [1, 2, 3, 5, 8], SEG = 1.8, REINF = 8, TERMOVE = [1, 1.4, 2, 1.2]; // дней/сек; дней на соседнюю провинцию; период подкрепления
+
+/* ====== СОСТОЯНИЕ ====== */
+let peer = null, conn = null, isHost = false, myCountry = null;
+let G = null;           // {tiles, turn, moves, winner, players, me, log}
+let sel = -1, hover = -1;
+const $ = id => document.getElementById(id);
+const cv = $('cv'), ctx = cv.getContext('2d');
+let dirty = true;
+function invalidate() { dirty = true; }
+const cam = { x: 0, y: 0, z: 1 }, view = { w: 800, h: 500 }, DPR = Math.min(window.devicePixelRatio || 1, 1.5);
+const ZMIN = 0.1, ZMAX = 5;
+function mapSize() { return [MAPW + 2 * PAD, MAPH + 2 * PAD]; }
+function resizeView() {
+  view.w = cv.clientWidth; view.h = cv.clientHeight;
+  cv.width = Math.round(view.w * DPR); cv.height = Math.round(view.h * DPR);
+  if (G) { clampCam(); invalidate(); }
+}
+function clampCam() {
+  const [mw, mh] = mapSize(), sw = mw * cam.z, sh = mh * cam.z, mg = 100;
+  cam.x = sw <= view.w ? (view.w - sw) / 2 : Math.min(mg, Math.max(view.w - sw - mg, cam.x));
+  cam.y = sh <= view.h ? (view.h - sh) / 2 : Math.min(mg, Math.max(view.h - sh - mg, cam.y));
+}
+function zoomAt(px, py, nz) {
+  nz = Math.max(ZMIN, Math.min(ZMAX, nz));
+  const wx = (px - cam.x) / cam.z, wy = (py - cam.y) / cam.z;
+  cam.z = nz; cam.x = px - wx * nz; cam.y = py - wy * nz;
+  clampCam(); invalidate();
+}
+function focusTile(i, z) {
+  const [x, y] = center(i);
+  cam.z = z; cam.x = view.w / 2 - x * z; cam.y = view.h / 2 - y * z;
+  clampCam(); invalidate();
+}
+function fitAll() {
+  const [mw, mh] = mapSize();
+  cam.z = Math.max(ZMIN, Math.min(ZMAX, Math.min(view.w / mw, view.h / mh)));
+  cam.x = (view.w - mw * cam.z) / 2; cam.y = (view.h - mh * cam.z) / 2;
+  clampCam(); invalidate();
+}
+function capital(p) { return PROV.cap[p]; }
+window.addEventListener('resize', resizeView);
+
+/* ====== gameState: единый объект данных страны и сохранения ====== */
+const SAVE_KEY = 'empire_save_v1';
+function defaultCountry() {
+  return {
+    name: '', title: '', leader: '', capital: '', ideo: 0, rel: 0, color: COLORS[0], photo: null,
+    generals: [
+      { role: 'Адмирал флота', cls: null, name: '', photo: null },
+      { role: 'Сухопутный генерал', cls: 0, name: '', photo: null },
+      { role: 'Сухопутный генерал', cls: 0, name: '', photo: null },
+      { role: 'Сухопутный генерал', cls: 0, name: '', photo: null }
+    ],
+    flag: { pat: 2, em: 1, c1: '#c0392b', c2: '#f5f5f5', c3: '#1c3f94' }
+  };
+}
+const gameState = { version: 1, country: defaultCountry(), game: null };
+const CO = () => gameState.country;
+
+/* ====== МЕНЮ ====== */
+const showScreen = id => { $('screenMain').style.display = id === 'main' ? '' : 'none'; $('screenEditor').style.display = id === 'editor' ? '' : 'none'; };
+$('btnSettings').onclick = () => showScreen('editor');
+$('btnBack').onclick = () => { showScreen('main'); updSummary(); };
+$('btnJoinOpen').onclick = () => { $('joinBox').style.display = $('joinBox').style.display === 'none' ? 'block' : 'none'; };
+IDEO.forEach((d, i) => $('cIdeo').add(new Option(d.name, i)));
+REL.forEach((r, i) => $('religionSelect').add(new Option(r.name, i)));
+function updIdeoDesc() { $('ideoDesc').textContent = IDEO[CO().ideo].desc; }
+function updRelDesc() { $('relDesc').textContent = REL[CO().rel].eff + ' (пока не влияет на игру)'; }
+function updColor() {
+  const h = CO().color, [r, g, b] = hexRgb(h);
+  $('colorPlate').style.background = h; $('colorHex').textContent = h.toUpperCase(); $('colorRgb').textContent = 'RGB(' + r + ', ' + g + ', ' + b + ')';
+}
+function updSummary() {
+  $('summary').textContent = (CO().name.trim() || 'Безымянная страна') + ' · ' + IDEO[CO().ideo].name + ' · ' + REL[CO().rel].short;
+}
+// поля формы пишут прямо в gameState.country
+$('cName').oninput = () => { CO().name = $('cName').value; updSummary(); };
+$('cTitle').oninput = () => { CO().title = $('cTitle').value; };
+$('cLeader').oninput = () => { CO().leader = $('cLeader').value; };
+$('cCapital').oninput = () => { CO().capital = $('cCapital').value; };
+$('cIdeo').onchange = () => { CO().ideo = +$('cIdeo').value; updIdeoDesc(); updSummary(); };
+$('religionSelect').onchange = () => { CO().rel = +$('religionSelect').value; updRelDesc(); updSummary(); };
+$('countryColorPicker').oninput = () => { CO().color = $('countryColorPicker').value; updColor(); };
+// выбор картинки с компьютера -> сжатие -> строка Base64 (data URL)
+function pickImage(onDone, w, h) {
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+  inp.onchange = () => {
+    const f = inp.files && inp.files[0]; if (!f) return;
+    const rd = new FileReader();
+    rd.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement('canvas'); c.width = w; c.height = h;
+        const x = c.getContext('2d'), k = Math.max(w / img.width, h / img.height), dw = img.width * k, dh = img.height * k;
+        x.fillStyle = '#12151c'; x.fillRect(0, 0, w, h); x.drawImage(img, (w - dw) / 2, (h - dh) / 2, dw, dh);
+        onDone(c.toDataURL('image/jpeg', 0.85));
+      };
+      img.src = rd.result;
+    };
+    rd.readAsDataURL(f);
+  };
+  inp.click();
+}
+function showPhoto(im, ph, d) {
+  if (d) { im.src = d; im.style.display = 'block'; ph.style.display = 'none'; }
+  else { im.style.display = 'none'; ph.style.display = ''; }
+}
+$('btnLeaderPhoto').onclick = () => pickImage(d => { CO().photo = d; showPhoto($('leaderImg'), $('leaderPh'), d); }, 240, 300);
+// 4 командующих: адмирал флота и три сухопутных генерала (пока никак не влияют на игру)
+const CMD_CLASSES = ['Пехотный', 'Артиллерийский', 'Кавалерийский'];
+const cmdUI = [];
+CO().generals.forEach((g0, i) => {
+  const card = document.createElement('div'); card.className = 'cmd' + (i === 0 ? ' adm' : '');
+  const head = document.createElement('div'); head.className = 'head';
+  let sel = null;
+  if (i === 0) head.textContent = '⚓ АДМИРАЛ ФЛОТА';
+  else {
+    sel = document.createElement('select');
+    CMD_CLASSES.forEach((n, k) => sel.add(new Option(n, k)));
+    sel.onchange = () => { CO().generals[i].cls = +sel.value; };
+    head.appendChild(sel);
+  }
+  const nm = document.createElement('input'); nm.maxLength = 28; nm.placeholder = i === 0 ? 'Имя адмирала' : 'Имя генерала';
+  nm.oninput = () => { CO().generals[i].name = nm.value; };
+  const box = document.createElement('div'); box.className = 'photobox';
+  const im = document.createElement('img'), ph = document.createElement('span'); ph.textContent = i === 0 ? 'ФОТО АДМИРАЛА' : 'ФОТО ГЕНЕРАЛА';
+  box.append(im, ph);
+  const up = document.createElement('button'); up.type = 'button'; up.textContent = 'Загрузить фото…';
+  up.onclick = () => pickImage(d => { CO().generals[i].photo = d; showPhoto(im, ph, d); }, 240, 300);
+  card.append(head, nm, box, up); $('cmdRow').appendChild(card);
+  cmdUI.push({ sel, nm, im, ph });
+});
+// заполнить форму из gameState.country (при загрузке сохранения)
+function fillUI(c) {
+  $('cName').value = c.name; $('cTitle').value = c.title; $('cLeader').value = c.leader; $('cCapital').value = c.capital;
+  $('cIdeo').value = c.ideo; $('religionSelect').value = c.rel; $('countryColorPicker').value = c.color;
+  $('fPat').value = c.flag.pat; $('fEm').value = c.flag.em; $('fC1').value = c.flag.c1; $('fC2').value = c.flag.c2; $('fC3').value = c.flag.c3;
+  showPhoto($('leaderImg'), $('leaderPh'), c.photo);
+  c.generals.forEach((g, i) => {
+    cmdUI[i].nm.value = g.name; if (cmdUI[i].sel) cmdUI[i].sel.value = g.cls | 0;
+    showPhoto(cmdUI[i].im, cmdUI[i].ph, g.photo);
+  });
+  updIdeoDesc(); updRelDesc(); updColor(); updFlag(); updSummary();
+}
+$('countryColorPicker').value = CO().color;
+updIdeoDesc(); updRelDesc(); updColor(); updSummary();
+
+/* ====== РЕДАКТОР ФЛАГА ====== */
+const PATS = ['Однотонный', 'Две горизонтали', 'Три горизонтали', 'Три вертикали', 'Скандинавский крест', 'Диагональ', 'Круг в центре', 'Треугольник у древка', 'Диагональный крест'];
+const EM_NAMES = ['Без эмблемы', 'Звезда', 'Скрещённые мечи', 'Корона', 'Шестерня', 'Солнце', 'Орёл', 'Лавровый венок', 'Щит'];
+const EMS = EM_NAMES;
+const PAL = ['#c0392b', '#e67e22', '#f1c40f', '#27ae60', '#2980b9', '#8e44ad', '#ecf0f1', '#2c3e50', '#16a085', '#d35400'];
+PATS.forEach((n, i) => $('fPat').add(new Option(n, i)));
+EM_NAMES.forEach((n, i) => $('fEm').add(new Option(n, i)));
+$('fPat').value = 2; $('fEm').value = 1;
+function readFlag() {
+  return { pat: +$('fPat').value, em: +$('fEm').value, c1: $('fC1').value, c2: $('fC2').value, c3: $('fC3').value };
+}
+function cleanFlag(f) {
+  f = f || {};
+  const hex = v => (typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v)) ? v : '#888888';
+  const num = (v, max) => Math.max(0, Math.min(max, v | 0));
+  return { pat: num(f.pat, PATS.length - 1), em: num(f.em, EMS.length - 1), c1: hex(f.c1), c2: hex(f.c2), c3: hex(f.c3) };
+}
+function drawFlag(c, f) {
+  const x = c.getContext('2d'), w = c.width, h = c.height;
+  x.clearRect(0, 0, w, h);
+  x.fillStyle = f.c1; x.fillRect(0, 0, w, h);
+  x.fillStyle = f.c2;
+  switch (f.pat) {
+    case 1: x.fillRect(0, h / 2, w, h / 2); break;
+    case 2: x.fillRect(0, h / 3, w, h / 3); x.fillStyle = f.c3; x.fillRect(0, h * 2 / 3, w, h / 3); break;
+    case 3: x.fillRect(w / 3, 0, w / 3, h); x.fillStyle = f.c3; x.fillRect(w * 2 / 3, 0, w / 3, h); break;
+    case 4: x.fillRect(0, h * 0.4, w, h * 0.2); x.fillRect(w * 0.3, 0, w * 0.14, h); break;
+    case 5: x.beginPath(); x.moveTo(w, 0); x.lineTo(w, h); x.lineTo(0, h); x.closePath(); x.fill(); break;
+    case 6: x.beginPath(); x.arc(w / 2, h / 2, h * 0.32, 0, Math.PI * 2); x.fill(); break;
+    case 7: x.beginPath(); x.moveTo(0, 0); x.lineTo(w * 0.5, h / 2); x.lineTo(0, h); x.closePath(); x.fill(); break;
+    case 8: x.strokeStyle = f.c2; x.lineWidth = h * 0.22; x.beginPath(); x.moveTo(0, 0); x.lineTo(w, h); x.moveTo(w, 0); x.lineTo(0, h); x.stroke(); break;
+  }
+  if (f.em > 0) drawEmblem(x, f.pat === 7 ? w * 0.17 : f.pat === 4 ? w * 0.37 : w / 2, h / 2, f.pat === 7 ? h * 0.22 : h * 0.3, f.em, f.c3);
+}
+function drawEmblem(x, cx, cy, r, id, col) {
+  x.save(); x.translate(cx, cy); x.scale(r, r);
+  x.fillStyle = col; x.strokeStyle = 'rgba(0,0,0,.55)'; x.lineWidth = 0.07; x.lineJoin = 'round'; x.lineCap = 'round';
+  const poly = pts => { x.beginPath(); pts.forEach(([a, b], i) => i ? x.lineTo(a, b) : x.moveTo(a, b)); x.closePath(); x.fill(); x.stroke(); };
+  const circ = (a, b, rr) => { x.beginPath(); x.arc(a, b, rr, 0, Math.PI * 2); x.fill(); x.stroke(); };
+  switch (id) {
+    case 1: { // звезда
+      const p = [];
+      for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, d = k % 2 ? 0.42 : 1; p.push([Math.cos(a) * d, Math.sin(a) * d]); }
+      poly(p); break;
+    }
+    case 2: // скрещённые мечи
+      for (const s of [-1, 1]) {
+        x.save(); x.rotate(s * Math.PI / 4);
+        poly([[0, -1], [0.1, -0.78], [0.1, 0.38], [-0.1, 0.38], [-0.1, -0.78]]);
+        poly([[-0.32, 0.38], [0.32, 0.38], [0.32, 0.5], [-0.32, 0.5]]);
+        poly([[-0.06, 0.5], [0.06, 0.5], [0.06, 0.8], [-0.06, 0.8]]);
+        circ(0, 0.88, 0.1);
+        x.restore();
+      }
+      break;
+    case 3: // корона
+      poly([[-0.9, 0.65], [-0.9, -0.4], [-0.45, 0.05], [0, -0.65], [0.45, 0.05], [0.9, -0.4], [0.9, 0.65]]);
+      circ(-0.9, -0.45, 0.12); circ(0, -0.72, 0.12); circ(0.9, -0.45, 0.12);
+      x.beginPath(); x.moveTo(-0.9, 0.35); x.lineTo(0.9, 0.35); x.stroke();
+      break;
+    case 4: { // шестерня
+      x.beginPath();
+      for (let k = 0; k < 8; k++) {
+        const a = k * Math.PI / 4;
+        [[a - 0.38, 0.72], [a - 0.2, 1], [a + 0.2, 1], [a + 0.38, 0.72]].forEach(([t, d], i) => {
+          const px = Math.cos(t) * d, py = Math.sin(t) * d;
+          (k || i) ? x.lineTo(px, py) : x.moveTo(px, py);
+        });
+      }
+      x.closePath(); x.moveTo(0.3, 0); x.arc(0, 0, 0.3, 0, Math.PI * 2, true);
+      x.fill('evenodd'); x.stroke(); break;
+    }
+    case 5: // солнце
+      for (let k = 0; k < 12; k++) {
+        const a = k * Math.PI / 6;
+        poly([[Math.cos(a - 0.14) * 0.58, Math.sin(a - 0.14) * 0.58], [Math.cos(a), Math.sin(a)], [Math.cos(a + 0.14) * 0.58, Math.sin(a + 0.14) * 0.58]]);
+      }
+      circ(0, 0, 0.45); break;
+    case 6: // орёл
+      for (const s of [-1, 1]) {
+        x.save(); x.scale(s, 1);
+        poly([[0.12, -0.3], [0.55, -0.78], [1, -0.72], [0.94, -0.46], [1, -0.2], [0.85, 0.05], [0.72, 0], [0.6, 0.25], [0.45, 0.2], [0.3, 0.45], [0.12, 0.3]]);
+        x.restore();
+      }
+      poly([[-0.18, -0.38], [0.18, -0.38], [0.24, 0.1], [0.42, 0.95], [0, 0.8], [-0.42, 0.95], [-0.24, 0.1]]);
+      circ(0, -0.55, 0.17);
+      poly([[0.1, -0.62], [0.36, -0.5], [0.1, -0.45]]);
+      break;
+    case 7: // лавровый венок
+      for (const s of [-1, 1]) {
+        x.save(); x.scale(s, 1);
+        x.beginPath(); x.arc(0, 0, 0.78, Math.PI * 0.55, Math.PI * 1.45); x.stroke();
+        for (let k = 0; k < 7; k++) {
+          const t = Math.PI * (0.6 + k * 0.13), o = k % 2 ? 1 : -1, rr = 0.78 + o * 0.1;
+          x.beginPath(); x.ellipse(rr * Math.cos(t), rr * Math.sin(t), 0.2, 0.09, t + Math.PI / 2 + o * 0.4, 0, Math.PI * 2);
+          x.fill(); x.stroke();
+        }
+        x.restore();
+      }
+      break;
+    case 8: // щит
+      x.beginPath(); x.moveTo(-0.8, -0.85); x.lineTo(0.8, -0.85); x.lineTo(0.8, 0);
+      x.quadraticCurveTo(0.8, 0.65, 0, 1); x.quadraticCurveTo(-0.8, 0.65, -0.8, 0);
+      x.closePath(); x.fill(); x.stroke();
+      x.beginPath(); x.moveTo(0, -0.85); x.lineTo(0, 0.98); x.moveTo(-0.8, -0.25); x.lineTo(0.8, -0.25); x.stroke();
+      break;
+  }
+  x.restore();
+}
+function updFlag() { CO().flag = readFlag(); drawFlag($('flagPrev'), CO().flag); }
+['fPat', 'fEm', 'fC1', 'fC2', 'fC3'].forEach(id => { $(id).oninput = updFlag; $(id).onchange = updFlag; });
+$('btnRnd').onclick = () => {
+  const pick = () => PAL[Math.floor(Math.random() * PAL.length)];
+  let a = pick(), b = pick(), c = pick();
+  while (b === a) b = pick();
+  $('fC1').value = a; $('fC2').value = b; $('fC3').value = c;
+  $('fPat').value = Math.floor(Math.random() * PATS.length);
+  $('fEm').value = Math.floor(Math.random() * EMS.length);
+  updFlag();
+};
+updFlag();
+
+function status(t) { $('status').textContent = t; }
+
+// страна для игры — копия gameState.country с подстановкой значений по умолчанию
+function readCountry() {
+  const c = gameState.country;
+  return {
+    name: c.name.trim() || 'Безымянная страна', title: c.title.trim() || 'Правитель', leader: c.leader.trim() || 'Неизвестный',
+    ideo: c.ideo, rel: c.rel, color: c.color, capital: c.capital.trim() || 'Столица', photo: c.photo,
+    generals: c.generals.map(g => Object.assign({}, g)), flag: Object.assign({}, c.flag)
+  };
+}
+// сопернику отправляем всё, кроме командующих (они пока не участвуют в игре)
+function pubCountry(c) { const o = Object.assign({}, c); delete o.generals; return o; }
+function cleanCountry(c) {
+  const s = (v, d) => (typeof v === 'string' && v.trim() ? v.trim().slice(0, 30) : d);
+  const ph = c && c.photo;
+  return {
+    name: s(c && c.name, 'Страна'), title: s(c && c.title, 'Правитель'), leader: s(c && c.leader, 'Лидер'),
+    ideo: Math.max(0, Math.min(IDEO.length - 1, (c && c.ideo | 0) || 0)),
+    rel: Math.max(0, Math.min(REL.length - 1, (c && c.rel | 0) || 0)),
+    color: (c && typeof c.color === 'string' && /^#[0-9a-f]{6}$/i.test(c.color)) ? c.color.toLowerCase() : COLORS[1],
+    capital: s(c && c.capital, 'Столица'),
+    photo: (typeof ph === 'string' && ph.length < 150000 && /^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(ph)) ? ph : null,
+    flag: cleanFlag(c && c.flag)
+  };
+}
+function lockMenu() {
+  $('btnCreate').disabled = true; $('btnJoin').disabled = true; $('btnBot').disabled = true;
+  document.querySelectorAll('#menu input:not(#myId), #menu select, .sw').forEach(e => { if (e.id !== 'myId') e.disabled = true; });
+}
+function unlockMenu() {
+  $('btnCreate').disabled = false; $('btnJoin').disabled = false; $('btnBot').disabled = false;
+  document.querySelectorAll('#menu input, #menu select, .sw').forEach(e => e.disabled = false);
+}
+function ensurePeerLib() {
+  if (typeof Peer === 'undefined') { status('Не загрузилась библиотека PeerJS. Проверьте интернет.'); return false; }
+  return true;
+}
+
+/* ====== СЕТЬ ====== */
+function createLobby(attempt) {
+  if (!ensurePeerLib()) return;
+  myCountry = readCountry(); isHost = true; lockMenu();
+  status('Создаю лобби…');
+  const id = 'hex-' + Math.random().toString(36).slice(2, 7);
+  peer = new Peer(id, PEER_CFG);
+  peer.on('open', pid => {
+    $('myId').value = pid; $('idBox').style.display = 'flex'; $('hostHelp').style.display = 'block';
+    status('Лобби создано. Ожидаю второго игрока…');
+  });
+  peer.on('connection', c => {
+    if (conn) { c.on('open', () => c.close()); return; }
+    conn = c; setupConn();
+  });
+  peer.on('error', e => {
+    if (e.type === 'unavailable-id' && (attempt || 0) < 5) { peer.destroy(); createLobby((attempt || 0) + 1); return; }
+    status('Ошибка сети: ' + e.type); if (!G) { unlockMenu(); }
+  });
+}
+function joinLobby() {
+  if (!ensurePeerLib()) return;
+  const id = $('joinId').value.trim();
+  if (!id) { status('Введите ID лобби.'); return; }
+  myCountry = readCountry(); isHost = false; lockMenu();
+  status('Подключаюсь…');
+  peer = new Peer(PEER_CFG);
+  peer.on('open', () => {
+    conn = peer.connect(id, { reliable: true });
+    setupConn();
+    setTimeout(() => { if (!G) { status('Не удалось подключиться. Проверьте ID и попробуйте снова.'); } }, 20000);
+  });
+  peer.on('error', e => {
+    status(e.type === 'peer-unavailable' ? 'Лобби с таким ID не найдено.' : 'Ошибка сети: ' + e.type);
+    if (!G) { unlockMenu(); }
+  });
+}
+function setupConn() {
+  conn.on('open', () => {
+    if (!isHost) { status('Подключено. Отправляю данные государства…'); conn.send({ t: 'hello', country: pubCountry(myCountry) }); }
+    else status('Игрок подключился. Ожидаю его государство…');
+  });
+  conn.on('data', onData);
+  conn.on('close', () => { if (G && G.winner < 0) { G.winner = -2; setLog('Соединение потеряно.'); showOver('Соединение с соперником потеряно'); } else if (!G) { status('Соединение закрыто.'); unlockMenu(); } });
+  conn.on('error', e => status('Ошибка соединения: ' + (e.type || e)));
+}
+function send(m) { if (conn && conn.open) conn.send(m); }
+let starting = false;
+function withLoading(fn) {
+  $('loading').style.display = 'flex';
+  setTimeout(() => {
+    try { fn(); }
+    catch (err) { console.error('Ошибка запуска игры:', err && err.stack || err); status('Ошибка генерации карты: ' + (err && err.message ? err.message : String(err))); starting = false; G = null; $('game').style.display = 'none'; $('menu').style.display = 'block'; }
+    finally { $('loading').style.display = 'none'; }
+  }, 40);
+}
+function newGame(tiles, players, me) {
+  return { tiles, players, me, gt: 0, at: performance.now(), speed: 1, paused: false, winner: -1, marches: [], nextId: 1, nextReinf: REINF, logs: [], lastSave: 0 };
+}
+function snapshot() {
+  return { t: 'state', os: G.tiles.map(x => x.o), as: G.tiles.map(x => x.a), ms: G.marches, gt: G.gt, speed: G.speed, paused: G.paused, winner: G.winner, nr: G.nextReinf, logs: G.logs };
+}
+function applyState(m) {
+  G.tiles.forEach((x, i) => { x.o = m.os[i]; x.a = m.as[i]; });
+  G.marches = m.ms; G.gt = m.gt; G.at = performance.now(); G.speed = m.speed; G.paused = m.paused;
+  G.winner = m.winner; G.nextReinf = m.nr; G.logs = m.logs;
+}
+function onData(m) {
+  if (!m || typeof m !== 'object') return;
+  if (m.t === 'hello' && isHost && !G && !starting) {
+    starting = true;
+    const guest = cleanCountry(m.country);
+    if (cDist(guest.color, myCountry.color) < 90) guest.color = farColor(myCountry.color);   // слишком похожие цвета разводим
+    const players = [myCountry, guest];
+    withLoading(() => {
+      G = newGame(genMap(Math.floor(Math.random() * 2147483647)), players, 0);
+      addLog('Игра началась! Время идёт — отдавайте приказы.');
+      send({ t: 'init', players: players.map(pubCountry), seed: SEED, caps: PROV.cap, tiles: G.tiles, snap: snapshot() });
+      startGame();
+    });
+  } else if (m.t === 'init' && !isHost && !G && !starting) {
+    starting = true;
+    withLoading(() => {
+      buildGeometry(m.seed >>> 0);
+      if (Array.isArray(m.caps) && m.caps.length === 2) PROV.cap = m.caps.map(v => v | 0);
+      G = newGame(m.tiles, [cleanCountry(m.players[0]), cleanCountry(m.players[1])], 1);
+      applyState(m.snap); startGame();
+    });
+  } else if (m.t === 'state' && G && !isHost) {
+    applyState(m); refresh();
+    if (G.winner >= 0) showWinner();
+  } else if (m.t === 'cmd' && G && isHost) {
+    if (Number.isInteger(m.from) && Number.isInteger(m.to) && cmdMove(1, m.from, m.to)) send(snapshot());
+  } else if (m.t === 'speed' && G && isHost) {
+    setSpeed(m.speed, m.paused);
+  }
+}
+
+/* ====== КАРТА: провинции (диаграмма Вороного) и граф соседей ====== */
+const NX = 140, NY = 78, CELL = 40, PAD = 30, MAPW = NX * CELL, MAPH = NY * CELL;
+let PROV = null, SEED = 0, EDGES = [];
+function mulberry(a) {
+  return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+}
+// отсечение многоугольника полуплоскостью a*x+b*y<=c; ребро, лежащее на линии отсечения, получает метку соседа
+// (метка t хранится в точке и относится к ребру, приходящему в эту точку)
+function clipPoly(poly, a, b, c, tag) {
+  const out = [], m = poly.length;
+  for (let k = 0; k < m; k++) {
+    const cur = poly[(k + m - 1) % m], nx = poly[k];
+    const dc = a * cur.x + b * cur.y - c, dn = a * nx.x + b * nx.y - c, cin = dc <= 0, nin = dn <= 0;
+    if (cin !== nin) {
+      const u = dc / (dc - dn), ix = cur.x + (nx.x - cur.x) * u, iy = cur.y + (nx.y - cur.y) * u;
+      if (nin) { out.push({ x: ix, y: iy, t: tag }); out.push({ x: nx.x, y: nx.y, t: nx.t }); }
+      else out.push({ x: ix, y: iy, t: nx.t });
+    } else if (cin) out.push({ x: nx.x, y: nx.y, t: nx.t });
+  }
+  return out;
+}
+function voronoi(sx, sy) {
+  const n = sx.length, polys = [];
+  for (let i = 0; i < n; i++) {
+    const gx = i % NX, gy = (i / NX) | 0, cand = [];
+    for (let yy = Math.max(0, gy - 3); yy <= Math.min(NY - 1, gy + 3); yy++)
+      for (let xx = Math.max(0, gx - 3); xx <= Math.min(NX - 1, gx + 3); xx++) {
+        const j = yy * NX + xx;
+        if (j !== i) cand.push([(sx[j] - sx[i]) ** 2 + (sy[j] - sy[i]) ** 2, j]);
+      }
+    cand.sort((p, q) => p[0] - q[0]);
+    let poly = [{ x: 0, y: 0, t: -1 }, { x: MAPW, y: 0, t: -1 }, { x: MAPW, y: MAPH, t: -1 }, { x: 0, y: MAPH, t: -1 }], R2 = 0;
+    const upd = () => { R2 = 0; for (const q of poly) R2 = Math.max(R2, (q.x - sx[i]) ** 2 + (q.y - sy[i]) ** 2); };
+    upd();
+    for (const [d2, j] of cand) {
+      if (d2 > 4 * R2) break;
+      poly = clipPoly(poly, sx[j] - sx[i], sy[j] - sy[i], (sx[j] ** 2 - sx[i] ** 2 + sy[j] ** 2 - sy[i] ** 2) / 2, j);
+      upd();
+    }
+    polys.push(poly);
+  }
+  return polys;
+}
+function centroid(poly) {
+  let A = 0, cx = 0, cy = 0;
+  for (let k = 0; k < poly.length; k++) {
+    const p = poly[k], q = poly[(k + 1) % poly.length], cr = p.x * q.y - q.x * p.y;
+    A += cr; cx += (p.x + q.x) * cr; cy += (p.y + q.y) * cr;
+  }
+  return Math.abs(A) < 1e-6 ? null : [cx / (3 * A), cy / (3 * A)];
+}
+// геометрия строится из числа seed — у обоих игроков получается одна и та же карта
+function buildGeometry(seed) {
+  SEED = seed;
+  const r = mulberry(seed), n = NX * NY, sx = [], sy = [];
+  for (let i = 0; i < n; i++) {
+    sx.push(((i % NX) + 0.5 + (r() - 0.5) * 0.9) * CELL);
+    sy.push((((i / NX) | 0) + 0.5 + (r() - 0.5) * 0.9) * CELL);
+  }
+  let polys;
+  for (let it = 0; it < 3; it++) {       // 2 шага релаксации Ллойда + финальное разбиение
+    polys = voronoi(sx, sy);
+    if (it === 2) break;
+    for (let i = 0; i < polys.length; i++) {
+      const c = centroid(polys[i]);
+      if (c && Number.isFinite(c[0]) && Number.isFinite(c[1])) { sx[i] = c[0]; sy[i] = c[1]; }
+    }
+  }
+  const adjS = Array.from({ length: n }, () => new Set()), em = new Map();
+  PROV = { n, cx: [], cy: [], poly: [], bb: [], area: [], rad: [], adj: [], cap: [0, 0] };
+  polys.forEach((poly, i) => {
+    const m = poly.length, f = [];
+    let A = 0, minx = 1e9, miny = 1e9, maxx = -1e9, maxy = -1e9, rad = 0;
+    for (let k = 0; k < m; k++) {
+      const p = poly[(k + m - 1) % m], q = poly[k];
+      f.push(q.x + PAD, q.y + PAD);
+      A += p.x * q.y - q.x * p.y;
+      minx = Math.min(minx, q.x); maxx = Math.max(maxx, q.x); miny = Math.min(miny, q.y); maxy = Math.max(maxy, q.y);
+      rad += Math.hypot(q.x - sx[i], q.y - sy[i]);
+      if (q.t >= 0 && Math.hypot(q.x - p.x, q.y - p.y) > 0.8) {
+        const j = q.t, key = i < j ? i * n + j : j * n + i;
+        adjS[i].add(j); adjS[j].add(i);
+        if (!em.has(key)) em.set(key, [Math.min(i, j), Math.max(i, j), p.x + PAD, p.y + PAD, q.x + PAD, q.y + PAD]);
+      }
+    }
+    PROV.cx.push(sx[i] + PAD); PROV.cy.push(sy[i] + PAD); PROV.poly.push(f);
+    PROV.bb.push([minx + PAD, miny + PAD, maxx + PAD, maxy + PAD]);
+    PROV.area.push(Math.abs(A) / 2); PROV.rad.push(rad / m);
+  });
+  PROV.adj = adjS.map(st => Array.from(st));
+  EDGES = Array.from(em.values());
+  const near = (px, py) => { let b = 0, bd = 1e18; for (let i = 0; i < n; i++) { const d = (sx[i] - px) ** 2 + (sy[i] - py) ** 2; if (d < bd) { bd = d; b = i; } } return b; };
+  PROV.cap = [near(MAPW * 0.06, MAPH / 2), near(MAPW * 0.94, MAPH / 2)];
+}
+function genMap(seed) {
+  buildGeometry(seed);
+  const mk = cs => {
+    const gw = Math.ceil(MAPW / cs) + 2, gh = Math.ceil(MAPH / cs) + 2, sm = u => u * u * (3 - 2 * u);
+    const g = Array.from({ length: gh }, () => Array.from({ length: gw }, () => Math.random()));
+    return (x, y) => {
+      const fx = x / cs, fy = y / cs, x0 = Math.floor(fx), y0 = Math.floor(fy), tx = sm(fx - x0), ty = sm(fy - y0);
+      const a = g[y0][x0], b = g[y0][x0 + 1], d = g[y0 + 1][x0], e = g[y0 + 1][x0 + 1];
+      return (a + (b - a) * tx) * (1 - ty) + (d + (e - d) * tx) * ty;
+    };
+  };
+  const SC = MAPW / 4000, el = mk(560 * SC), el2 = mk(230 * SC), mo = mk(360 * SC), tiles = [];
+  // Суша формируется крупными массивами; низкие значения высоты — океан.
+  for (let i = 0; i < PROV.n; i++) {
+    const x = PROV.cx[i] - PAD, y = PROV.cy[i] - PAD;
+    const nx = x / MAPW, ny = y / MAPH;
+    const broad = el(x, y) * 0.72 + el2(x, y) * 0.28;
+    const continent = broad + 0.16 * Math.sin(nx * 8.2 + 0.8) + 0.10 * Math.sin(ny * 10.5 + nx * 4.0);
+    const m = mo(x, y);
+    let t;
+    if (continent < 0.49 || nx < 0.035 || nx > 0.965 || ny < 0.035 || ny > 0.965) t = 4; // океан
+    else if (continent < 0.535) t = 5; // мелководье / море
+    else t = broad > 0.66 ? 2 : (m > 0.56 ? 1 : 0);
+    if (t < 4 && t !== 2 && Math.random() < 0.012) t = 3;
+    tiles.push({ t, o: -1, a: t >= 4 ? 0 : 1 + Math.floor(Math.random() * 3) + (t === 2 ? 1 : 0) });
+  }
+  // столицы — на суше
+  [0, 1].forEach(p => {
+    let c = PROV.cap[p];
+    if (tiles[c].t >= 4) {
+      let bd = 1e18;
+      for (let i = 0; i < PROV.n; i++) if (tiles[i].t < 4) {
+        const d = (PROV.cx[i] - PROV.cx[c]) ** 2 + (PROV.cy[i] - PROV.cy[c]) ** 2;
+        if (d < bd) { bd = d; c = i; }
+      }
+    }
+    PROV.cap[p] = c;
+  });
+  // страны должны быть связаны сушей (флота нет): если океан разделяет столицы, прокладываем мост самым дешёвым путём
+  const reach = new Uint8Array(PROV.n), qs = [PROV.cap[0]];
+  reach[PROV.cap[0]] = 1;
+  for (let h = 0; h < qs.length; h++) for (const nb of PROV.adj[qs[h]]) if (!reach[nb] && tiles[nb].t < 4) { reach[nb] = 1; qs.push(nb); }
+  if (!reach[PROV.cap[1]]) {
+    const dist = new Float64Array(PROV.n).fill(1e18), prev = new Int32Array(PROV.n).fill(-1), heap = [[0, PROV.cap[0]]];
+    dist[PROV.cap[0]] = 0;
+    const push = it => { heap.push(it); let k = heap.length - 1; while (k > 0) { const pa = (k - 1) >> 1; if (heap[pa][0] <= heap[k][0]) break; [heap[pa], heap[k]] = [heap[k], heap[pa]]; k = pa; } };
+    const pop = () => {
+      const top = heap[0], last = heap.pop();
+      if (heap.length) {
+        heap[0] = last; let k = 0;
+        for (;;) {
+          const l = 2 * k + 1, r = l + 1; let m = k;
+          if (l < heap.length && heap[l][0] < heap[m][0]) m = l;
+          if (r < heap.length && heap[r][0] < heap[m][0]) m = r;
+          if (m === k) break;
+          [heap[m], heap[k]] = [heap[k], heap[m]]; k = m;
+        }
+      }
+      return top;
+    };
+    while (heap.length) {
+      const [d, c] = pop();
+      if (d > dist[c]) continue;
+      if (c === PROV.cap[1]) break;
+      for (const nb of PROV.adj[c]) { const nd = d + (tiles[nb].t < 4 ? 1 : 8); if (nd < dist[nb]) { dist[nb] = nd; prev[nb] = c; push([nd, nb]); } }
+    }
+    for (let k = PROV.cap[1]; k !== -1; k = prev[k]) if (tiles[k].t >= 4) { tiles[k].t = 0; tiles[k].a = 1 + Math.floor(Math.random() * 3); }
+  }
+  // стартовые зоны: 30 ближайших по суше провинций вокруг каждой столицы
+  [0, 1].forEach(p => {
+    const c = PROV.cap[p], seen = new Uint8Array(PROV.n), qq = [c];
+    seen[c] = 1;
+    for (let h = 0; h < qq.length && qq.length < 30; h++) for (const nb of PROV.adj[qq[h]]) if (!seen[nb] && tiles[nb].t < 4 && qq.length < 30) { seen[nb] = 1; qq.push(nb); }
+    qq.forEach(i => { const tl = tiles[i]; tl.o = p; tl.a = 3; tl.t = i === c ? 3 : 0; });
+  });
+  return tiles;
+}
+function neighbors(i) { return PROV.adj[i]; }
+function center(i) { return [PROV.cx[i], PROV.cy[i]]; }
+// ближайшая провинция к точке (координаты мира с PAD): перебор только соседних клеток исходной сетки
+function nearestProv(wx, wy) {
+  const gx = Math.floor((wx - PAD) / CELL), gy = Math.floor((wy - PAD) / CELL);
+  let best = -1, bd = 1e18;
+  for (let yy = Math.max(0, gy - 2); yy <= Math.min(NY - 1, gy + 2); yy++)
+    for (let xx = Math.max(0, gx - 2); xx <= Math.min(NX - 1, gx + 2); xx++) {
+      const i = yy * NX + xx, dx = wx - PROV.cx[i], dy = wy - PROV.cy[i], d = dx * dx + dy * dy;
+      if (d < bd) { bd = d; best = i; }
+    }
+  return best;
+}
+
+/* ====== ЛОГИКА ИГРЫ (реальное время, считает хост) ====== */
+function addLog(t) { G.logs.push(t); if (G.logs.length > 6) G.logs.shift(); }
+function flash(t) { G.flash = t; G.flashUntil = performance.now() + 2500; }
+function curGT() { return G.gt + ((G.paused || G.winner !== -1) ? 0 : (performance.now() - G.at) / 1000 * SPEEDS[G.speed]); }
+function segDur(p, a, b) {
+  const len = Math.hypot(PROV.cx[a] - PROV.cx[b], PROV.cy[a] - PROV.cy[b]) / CELL;
+  return SEG * TERMOVE[G.tiles[b].t] * Math.max(0.5, len);
+}
+// кратчайший путь через свои провинции; последний шаг может быть в любую провинцию
+let _pv = null, _pq = null;
+function findPath(p, from, to) {
+  if (from === to) return null;
+  const n = PROV.n;
+  if (!_pv || _pv.length !== n) { _pv = new Int32Array(n); _pq = new Int32Array(n); }
+  _pv.fill(-2); _pv[from] = -1;
+  let qh = 0, qt = 0; _pq[qt++] = from;
+  while (qh < qt) {
+    const c = _pq[qh++];
+    for (const nb of PROV.adj[c]) {
+      if (_pv[nb] !== -2) continue;
+      if (nb === to) {
+        _pv[nb] = c;
+        const path = []; let k = nb;
+        while (k !== -1) { path.push(k); k = _pv[k]; }
+        return path.reverse();
+      }
+      if (G.tiles[nb].o === p && G.tiles[nb].t < 4) { _pv[nb] = c; _pq[qt++] = nb; }
+    }
+  }
+  return null;
+}
+function cmdMove(p, from, to) {
+  if (G.winner !== -1) return false;
+  const f = G.tiles[from];
+  if (!f || !G.tiles[to] || f.t >= 4 || G.tiles[to].t >= 4 || f.o !== p || f.a < 2) return false;
+  const path = findPath(p, from, to);
+  if (!path) return false;
+  const n = f.a - 1; f.a = 1;
+  G.marches.push({ id: G.nextId++, p, n, path, s: 0, t0: curGT(), dur: segDur(p, path[0], path[1]) });
+  return true;
+}
+function setSpeed(sp, paused) {
+  if (isHost) {
+    G.gt = curGT(); G.at = performance.now();
+    G.speed = Math.max(0, Math.min(SPEEDS.length - 1, sp | 0)); G.paused = !!paused;
+    send(snapshot());
+  } else send({ t: 'speed', speed: sp, paused: paused });
+}
+// возвращает true, если армия идёт дальше (проходит через свой гекс)
+const atkI = p => ideoFx(p) === 'attack' ? 1.25 : 1;
+const defI = i => { const t = G.tiles[i]; return TER[t.t].def * (t.o >= 0 && ideoFx(t.o) === 'defense' ? 1.25 : 1); };
+function arrive(m, idx, last) {
+  const t = G.tiles[idx], me = G.players[m.p];
+  if (t.t >= 4) { addLog('Моря и океаны непроходимы без флота.'); return false; }
+  if (t.o === m.p) {
+    if (!last) return true;
+    t.a = Math.min(CAP, t.a + m.n); return false;
+  }
+  const dm = defI(idx), atk = m.n * atkI(m.p), def = t.a * dm;
+  if (atk > def) {
+    const enemy = t.o >= 0;
+    t.o = m.p; t.a = Math.min(CAP, Math.max(1, Math.round(atk - def)) + (ideoFx(m.p) === 'capture' ? 1 : 0));
+    addLog(me.name + ' захватывает провинцию (' + TER[t.t].n + ')' + (enemy ? ' у врага!' : '.'));
+  } else {
+    t.a = Math.max(1, Math.ceil(t.a - atk / dm));
+    addLog(me.name + ': атака на ' + TER[t.t].n.toLowerCase() + ' отбита.');
+  }
+  return false;
+}
+function reinforce() {
+  for (let q = 0; q < 2; q++) {
+    const own = [];
+    G.tiles.forEach(x => { if (x.o === q) { x.a = Math.min(CAP, x.a + (x.t === 3 ? 2 : 1)); own.push(x); } });
+    if (ideoFx(q) === 'reinf' && own.length) {
+      for (let k = 0; k < 2; k++) { const x = own[Math.floor(Math.random() * own.length)]; x.a = Math.min(CAP, x.a + 1); }
+    }
+  }
+}
+function simulate(dt) {
+  if (G.winner === -1 && !G.paused) {
+    G.gt += dt * SPEEDS[G.speed];
+    for (const m of G.marches) {
+      while (!m.dead && G.gt >= m.t0 + m.dur) {
+        const tEnd = m.t0 + m.dur, last = m.s + 2 >= m.path.length;
+        if (arrive(m, m.path[m.s + 1], last)) { m.s++; m.t0 = tEnd; m.dur = segDur(m.p, m.path[m.s], m.path[m.s + 1]); }
+        else m.dead = true;
+      }
+    }
+    G.marches = G.marches.filter(m => !m.dead);
+    while (G.gt >= G.nextReinf) { reinforce(); G.nextReinf += REINF; }
+    const cnt = [0, 0]; G.tiles.forEach(x => { if (x.o >= 0) cnt[x.o]++; });
+    if (cnt[0] === 0) G.winner = 1; else if (cnt[1] === 0) G.winner = 0;
+  }
+  G.at = performance.now();
+}
+
+/* ====== ВВОД ====== */
+function hitTest(px, py) {
+  const wx = (px - cam.x) / cam.z, wy = (py - cam.y) / cam.z;
+  if (wx < PAD || wy < PAD || wx > PAD + MAPW || wy > PAD + MAPH) return -1;
+  return nearestProv(wx, wy);
+}
+function rel(e) { const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+const ptrs = new Map(); let dragMoved = false, pinchD = 0, downPt = null;
+const pdist = () => { const [a, b] = [...ptrs.values()]; return Math.hypot(a.x - b.x, a.y - b.y); };
+cv.addEventListener('pointerdown', e => {
+  if (!G || e.button === 2) return;
+  try { cv.setPointerCapture(e.pointerId); } catch (x) {}
+  ptrs.set(e.pointerId, rel(e));
+  if (ptrs.size === 1) { downPt = rel(e); dragMoved = e.button === 1; }   // средняя кнопка — только перетаскивание
+  else { dragMoved = true; pinchD = pdist(); }
+});
+cv.addEventListener('pointermove', e => {
+  if (!G) return;
+  const p = rel(e); mouse.x = p.x; mouse.y = p.y; mouse.in = true;
+  if (ptrs.has(e.pointerId)) {
+    const prev = ptrs.get(e.pointerId); ptrs.set(e.pointerId, p);
+    if (ptrs.size === 1) {
+      if (!dragMoved && Math.hypot(p.x - downPt.x, p.y - downPt.y) > 5) dragMoved = true;
+      if (dragMoved) { cam.x += p.x - prev.x; cam.y += p.y - prev.y; clampCam(); cv.style.cursor = 'grabbing'; invalidate(); }
+    } else if (ptrs.size === 2) {
+      const [a, b] = [...ptrs.values()], d = pdist();
+      if (pinchD > 0) zoomAt((a.x + b.x) / 2, (a.y + b.y) / 2, cam.z * d / pinchD);
+      pinchD = d;
+    }
+  } else {
+    const h = hitTest(p.x, p.y);
+    if (h !== hover || h >= 0) { hover = h; invalidate(); }   // с подсказкой кадр нужен при каждом движении
+  }
+});
+function endPtr(e) {
+  const wasSingle = ptrs.size === 1 && ptrs.has(e.pointerId);
+  ptrs.delete(e.pointerId);
+  if (ptrs.size === 0) cv.style.cursor = 'grab';
+  if (wasSingle && !dragMoved && e.type === 'pointerup') handleClick(rel(e), e.shiftKey);
+}
+cv.addEventListener('pointerup', endPtr);
+cv.addEventListener('pointercancel', endPtr);
+cv.addEventListener('mousedown', e => { if (e.button === 1) e.preventDefault(); });
+cv.addEventListener('pointerleave', e => { mouse.in = false; if (!ptrs.size && G && hover !== -1) { hover = -1; invalidate(); } });
+cv.addEventListener('wheel', e => {
+  e.preventDefault();
+  const p = rel(e); zoomAt(p.x, p.y, cam.z * Math.exp(-e.deltaY * 0.002));
+}, { passive: false });
+$('zIn').onclick = () => zoomAt(view.w / 2, view.h / 2, cam.z * 1.3);
+$('zOut').onclick = () => zoomAt(view.w / 2, view.h / 2, cam.z / 1.3);
+$('zHome').onclick = () => { if (G) focusTile(capital(G.me), 1.6); };
+$('zAll').onclick = () => { if (G) fitAll(); };
+
+function issueMove(from, to) {
+  if (isHost) { if (cmdMove(0, from, to)) send(snapshot()); }
+  else send({ t: 'cmd', from, to });
+}
+function handleClick(p, force) {
+  if (!G || G.winner !== -1) return;
+  invalidate();
+  const i = hitTest(p.x, p.y); if (i < 0) return;
+  const t = G.tiles[i];
+  if (sel >= 0) {
+    if (i === sel) sel = -1;
+    else if (t.o === G.me && t.a >= 2 && !force) sel = i;
+    else if (findPath(G.me, sel, i)) { issueMove(sel, i); sel = -1; }
+    else { sel = -1; flash('Нет пути'); }
+  } else if (t.o === G.me) {
+    if (t.a >= 2) sel = i; else flash('Нужно минимум 2 армии');
+  }
+}
+cv.addEventListener('contextmenu', e => { e.preventDefault(); if (G && sel >= 0) handleClick(rel(e), true); });
+document.addEventListener('keydown', e => {
+  if (!G || $('game').style.display === 'none') return;
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  if (e.code === 'Space') { e.preventDefault(); setSpeed(G.speed, !G.paused); }
+  else if (e.key >= '1' && e.key <= '5') setSpeed(+e.key - 1, false);
+  else if (e.key === '+' || e.key === '=') setSpeed(Math.min(SPEEDS.length - 1, G.speed + 1), false);
+  else if (e.key === '-') setSpeed(Math.max(0, G.speed - 1), G.paused);
+  else if (e.key === 'Escape') { sel = -1; invalidate(); }
+  else if (e.key === 'f' || e.key === 'F') toggleFull();
+});
+SPEEDS.forEach((sp, i) => {
+  const b = document.createElement('button');
+  b.className = 'sp'; b.textContent = i + 1; b.title = sp + ' дн./сек';
+  b.onclick = () => { if (G) setSpeed(i, false); };
+  $('spd').appendChild(b);
+});
+$('bPause').onclick = () => { if (G) setSpeed(G.speed, !G.paused); };
+function toggleFull() {
+  try {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+    else document.exitFullscreen();
+  } catch (err) {}
+}
+$('bFull').onclick = toggleFull;
+document.addEventListener('fullscreenchange', () => setTimeout(resizeView, 50));
+const keys = new Set();
+document.addEventListener('keydown', e => keys.add(e.code));
+document.addEventListener('keyup', e => keys.delete(e.code));
+window.addEventListener('blur', () => keys.clear());
+
+/* ====== ОТРИСОВКА ====== */
+const mouse = { x: 0, y: 0 };
+const RS_IMG = Math.min(1.5, Math.sqrt(14e6 / ((MAPW + 2 * PAD) * (MAPH + 2 * PAD)))), ZLIVE = 1.3;   // размер слоёв ограничен ~14 Мпикс; ближе ZLIVE рисуем векторно
+let relief = null, fillBase = null, fbx = null, baseOwner = null;
+function paintProv(i, c = fbx) {
+  const t = G.tiles[i], col = (t.o >= 0 && t.t < 4) ? G.players[t.o].color : TER[t.t].col;
+  c.lineJoin = 'round'; c.lineWidth = 1.2;
+  polyPath(c, PROV.poly[i], 0, 0, 1); c.fillStyle = col; c.fill(); c.strokeStyle = col; c.stroke();
+}
+function buildBase() {
+  const [mw, mh] = mapSize();
+  fillBase = document.createElement('canvas');
+  fillBase.width = Math.ceil(mw * RS_IMG); fillBase.height = Math.ceil(mh * RS_IMG);
+  fbx = fillBase.getContext('2d'); fbx.setTransform(RS_IMG, 0, 0, RS_IMG, 0, 0); fbx.lineJoin = 'round'; fbx.lineWidth = 1.2;
+  baseOwner = new Int8Array(PROV.n);
+  for (let i = 0; i < PROV.n; i++) { paintProv(i); baseOwner[i] = G.tiles[i].o; }
+}
+function syncBase() {
+  for (let i = 0; i < PROV.n; i++) if (baseOwner[i] !== G.tiles[i].o) { paintProv(i); baseOwner[i] = G.tiles[i].o; }
+}
+function mix(hex, k) {
+  const n = parseInt(hex.slice(1), 16), f = c => Math.round(c + (255 - c) * k);
+  return 'rgb(' + f(n >> 16) + ',' + f(n >> 8 & 255) + ',' + f(n & 255) + ')';
+}
+// контур провинции, при желании уменьшенный в k раз относительно точки (cx, cy)
+function polyPath(c, f, cx, cy, k) {
+  c.beginPath();
+  for (let q = 0; q < f.length; q += 2) {
+    const px = cx + (f[q] - cx) * k, py = cy + (f[q + 1] - cy) * k;
+    q ? c.lineTo(px, py) : c.moveTo(px, py);
+  }
+  c.closePath();
+}
+// топографическая подложка: контуры гор, лесная штриховка, форты, реки (всё внутри форм провинций)
+// рельеф одной провинции (используется и при запекании слоя, и для векторной отрисовки вблизи)
+function reliefProv(x, i) {
+  const t = G.tiles[i], f = PROV.poly[i], cx = PROV.cx[i], cy = PROV.cy[i], rad = PROV.rad[i], bb = PROV.bb[i], area = PROV.area[i];
+  const r = mulberry(i * 7919 + 17), rx = () => bb[0] + r() * (bb[2] - bb[0]), ry = () => bb[1] + r() * (bb[3] - bb[1]);
+  const wash = (wx, wy, rr, c0) => {
+    const g = x.createRadialGradient(wx, wy, 1, wx, wy, rr); g.addColorStop(0, c0); g.addColorStop(1, 'rgba(0,0,0,0)');
+    x.fillStyle = g; x.fillRect(wx - rr, wy - rr, 2 * rr, 2 * rr);
+  };
+  x.save(); polyPath(x, f, cx, cy, 1); x.clip(); x.lineJoin = 'round';
+  if (t.t >= 4) {   // океан и море: волны
+    x.strokeStyle = t.t === 4 ? 'rgba(160,205,235,.12)' : 'rgba(255,255,255,.14)'; x.lineWidth = 0.8;
+    for (let k = 0, n = Math.round(area / 260); k < n; k++) {
+      const px = rx(), py = ry(); x.beginPath(); x.moveTo(px - 4, py);
+      x.quadraticCurveTo(px - 2, py - 2.2, px, py); x.quadraticCurveTo(px + 2, py + 2.2, px + 4, py); x.stroke();
+    }
+  } else if (t.t === 2) {
+    wash(cx - rad * 0.25, cy - rad * 0.3, rad * 1.1, 'rgba(255,255,255,.2)');
+    wash(cx + rad * 0.3, cy + rad * 0.3, rad, 'rgba(0,0,0,.28)');
+    x.lineWidth = 0.9; x.strokeStyle = 'rgba(25,15,5,.42)';
+    for (const k of [0.9, 0.72, 0.54, 0.36, 0.2]) {
+      x.beginPath();
+      for (let q = 0; q < f.length; q += 2) {
+        const j = 1 + (r() - 0.5) * 0.12, px = cx + (f[q] - cx) * k * j, py = cy + (f[q + 1] - cy) * k * j;
+        q ? x.lineTo(px, py) : x.moveTo(px, py);
+      }
+      x.closePath(); x.stroke();
+    }
+  } else if (t.t === 1) {
+    wash(cx, cy, rad * 1.1, 'rgba(25,80,35,.22)');
+    x.fillStyle = 'rgba(8,38,14,.42)';
+    for (let k = 0, n = Math.round(area / 55); k < n; k++) { x.beginPath(); x.arc(rx(), ry(), 0.9 + r() * 0.9, 0, 7); x.fill(); }
+  } else if (t.t === 3) {
+    x.lineWidth = 1.2;
+    [0.78, 0.56, 0.34].forEach((k, q) => { polyPath(x, f, cx, cy, k); x.strokeStyle = q % 2 ? 'rgba(0,0,0,.4)' : 'rgba(255,255,255,.5)'; x.stroke(); });
+  } else {
+    x.strokeStyle = 'rgba(50,38,12,.16)'; x.lineWidth = 0.8;
+    for (let k = 0, n = Math.round(area / 380); k < n; k++) { const px = rx(), py = ry(); x.beginPath(); x.moveTo(px - 2.5, py + 1.5); x.lineTo(px, py - 1.5); x.lineTo(px + 2.5, py + 1.5); x.stroke(); }
+  }
+  x.restore();
+}
+// реки текут только по суше: линия обрывается, когда выходит в море
+let RIVERS = [];
+function genRivers() {
+  const [mw, mh] = mapSize(), rr = mulberry(424242), nr = Math.max(5, Math.round(mw / 800));
+  RIVERS = [];
+  for (let k = 0; k < nr; k++) {
+    let px = (k + 0.5) * mw / nr + (rr() - 0.5) * 120, py = 0, ang = Math.PI / 2, cur = [];
+    while (py < mh) {
+      ang = Math.max(0.55, Math.min(2.6, ang + (rr() - 0.5) * 0.7)); px += Math.cos(ang) * 14; py += Math.sin(ang) * 14;
+      const pi = nearestProv(px, py);
+      if (pi >= 0 && G.tiles[pi].t < 4) cur.push([px, py]); else { if (cur.length > 1) RIVERS.push(cur); cur = []; }
+    }
+    if (cur.length > 1) RIVERS.push(cur);
+  }
+}
+function drawRivers(x) {
+  x.lineJoin = 'round'; x.lineCap = 'round';
+  [[4, 'rgba(20,50,90,.3)'], [1.8, 'rgba(130,180,225,.6)']].forEach(([w, c]) => {
+    x.beginPath();
+    for (const pl of RIVERS) pl.forEach(([a, b], j) => j ? x.lineTo(a, b) : x.moveTo(a, b));
+    x.lineWidth = w; x.strokeStyle = c; x.stroke();
+  });
+}
+function buildRelief() {
+  const [mw, mh] = mapSize(), RS = RS_IMG;
+  relief = document.createElement('canvas');
+  relief.width = Math.ceil(mw * RS); relief.height = Math.ceil(mh * RS);
+  const x = relief.getContext('2d'); x.scale(RS, RS);
+  genRivers();
+  for (let i = 0; i < PROV.n; i++) reliefProv(x, i);
+  drawRivers(x);
+}
+// значок дивизии в стиле НАТО: рамка + символ рода войск + знак размера сверху + сила на плашке снизу
+const SPR = 3, sprCache = new Map();
+function tokenSprite(n, col, type) {
+  const key = col + '|' + type + '|' + n;
+  let c = sprCache.get(key);
+  if (c) return c;
+  if (sprCache.size > 400) sprCache.clear();
+  c = document.createElement('canvas'); c.width = 44 * SPR; c.height = 56 * SPR;
+  const x = c.getContext('2d'); x.translate(22 * SPR, 28 * SPR); x.scale(SPR, SPR);
+  x.fillStyle = 'rgba(0,0,0,.35)'; x.fillRect(-14, -12, 34, 22);
+  x.fillStyle = mix(col, 0.2); x.fillRect(-17, -15, 34, 22);
+  x.lineWidth = 2; x.strokeStyle = '#f4f1e6'; x.strokeRect(-17, -15, 34, 22);
+  x.fillStyle = '#f4f1e6'; x.lineWidth = 2.2;
+  x.beginPath();
+  if (type === 0) { x.moveTo(-17, -15); x.lineTo(17, 7); x.moveTo(17, -15); x.lineTo(-17, 7); }   // пехота
+  else if (type === 1) { x.moveTo(-17, 7); x.lineTo(17, -15); }                                   // кавалерия
+  x.stroke();
+  if (type === 2) { x.beginPath(); x.arc(0, -4, 5, 0, 6.3); x.fill(); }                           // артиллерия
+  x.textAlign = 'center'; x.textBaseline = 'middle'; x.lineJoin = 'round';
+  x.fillStyle = '#fff'; x.strokeStyle = 'rgba(0,0,0,.8)'; x.lineWidth = 3;
+  x.font = 'bold 11px sans-serif';
+  const mark = n < 4 ? 'II' : n < 8 ? 'III' : n < 14 ? 'X' : 'XX';
+  x.strokeText(mark, 0, -21); x.fillText(mark, 0, -21);
+  x.font = 'bold 15px sans-serif';
+  x.strokeText(String(n), 0, 17); x.fillText(String(n), 0, 17);
+  sprCache.set(key, c);
+  return c;
+}
+function drawToken(x, y, n, col, type, sc, sel) {
+  ctx.drawImage(tokenSprite(n, col, type), x - 22 * sc, y - 28 * sc, 44 * sc, 56 * sc);
+  if (sel) { ctx.lineWidth = 3.5 * sc; ctx.strokeStyle = '#ffe066'; ctx.strokeRect(x - 17 * sc, y - 15 * sc, 34 * sc, 22 * sc); }
+}
+function draw() {
+  if (!G) return;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  ctx.setTransform(DPR * cam.z, 0, 0, DPR * cam.z, DPR * cam.x, DPR * cam.y);
+  const z = cam.z, TK = 0.85 * CELL / 60, sc = Math.max(1, Math.min(1.7, 0.55 / (z * TK))) * TK;
+  const vx0 = -cam.x / z - 30, vy0 = -cam.y / z - 30, vx1 = (view.w - cam.x) / z + 30, vy1 = (view.h - cam.y) / z + 30;
+  const pv = (x, y) => x >= vx0 && x <= vx1 && y >= vy0 && y <= vy1;
+  const inView = i => { const b = PROV.bb[i]; return b[2] >= vx0 && b[0] <= vx1 && b[3] >= vy0 && b[1] <= vy1; };
+  // 1–2. заливка стран и топографическая подложка: готовые слои, рисуется только видимая часть
+  syncBase();
+  const [mw, mh] = mapSize();
+  const rx0 = Math.max(0, vx0), ry0 = Math.max(0, vy0), rx1 = Math.min(mw, vx1), ry1 = Math.min(mh, vy1);
+  if (z > ZLIVE) {   // вблизи рисуем векторно, чтобы не было размытия
+    for (let i = 0; i < PROV.n; i++) { if (!inView(i)) continue; paintProv(i, ctx); reliefProv(ctx, i); }
+    drawRivers(ctx);
+  } else if (rx1 > rx0 && ry1 > ry0) {
+    for (const img of [fillBase, relief]) {
+      if (img) ctx.drawImage(img, rx0 * RS_IMG, ry0 * RS_IMG, (rx1 - rx0) * RS_IMG, (ry1 - ry0) * RS_IMG, rx0, ry0, rx1 - rx0, ry1 - ry0);
+    }
+  }
+  // 3–5. пути сообщения, границы провинций и государств — один проход по рёбрам
+  const pr = new Path2D(), pin = new Path2D(), pb = new Path2D(), pc = new Path2D(), roads = z > 0.55;
+  for (const [i, j, x1, y1, x2, y2] of EDGES) {
+    if (!pv(x1, y1)) continue;
+    const ti = G.tiles[i], tj = G.tiles[j], wi = ti.t >= 4, wj = tj.t >= 4;
+    if (wi || wj) { if (wi !== wj) { pc.moveTo(x1, y1); pc.lineTo(x2, y2); } continue; }   // берег; внутри моря границ нет
+    if (ti.o === tj.o) { pin.moveTo(x1, y1); pin.lineTo(x2, y2); }
+    else { pb.moveTo(x1, y1); pb.lineTo(x2, y2); }
+    if (roads) { pr.moveTo(PROV.cx[i], PROV.cy[i]); pr.lineTo(PROV.cx[j], PROV.cy[j]); }
+  }
+  if (roads) { ctx.lineWidth = 0.9; ctx.strokeStyle = 'rgba(240,230,195,.2)'; ctx.stroke(pr); }
+  ctx.lineWidth = 0.7; ctx.strokeStyle = 'rgba(0,0,0,.22)'; ctx.stroke(pin);
+  ctx.lineWidth = Math.max(1.2, 1 / z); ctx.strokeStyle = 'rgba(6,22,36,.6)'; ctx.stroke(pc);
+  ctx.lineCap = 'round';
+  ctx.lineWidth = Math.max(2.2, 1.8 / z); ctx.strokeStyle = '#0a0c11'; ctx.stroke(pb);
+  ctx.lineWidth = Math.max(0.8, 0.6 / z); ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.stroke(pb);
+  ctx.lineCap = 'butt';
+  // 6. наведение и выбор
+  if (hover >= 0 && !ptrs.size) { polyPath(ctx, PROV.poly[hover], 0, 0, 1); ctx.fillStyle = 'rgba(255,255,255,.1)'; ctx.fill(); }
+  if (sel >= 0) { polyPath(ctx, PROV.poly[sel], 0, 0, 1); ctx.lineWidth = Math.max(2.2, 1.6 / z); ctx.strokeStyle = '#ffe066'; ctx.stroke(); }
+  // 7. предпросмотр маршрута по дорогам
+  if (sel >= 0 && hover >= 0 && hover !== sel && G.tiles[sel].o === G.me) {
+    const path = findPath(G.me, sel, hover);
+    if (path) {
+      ctx.beginPath();
+      path.forEach((k, j) => { const [x, y] = center(k); j ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+      ctx.lineWidth = 2.5; ctx.setLineDash([5, 4]); ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.stroke(); ctx.setLineDash([]);
+    }
+  }
+  // 8. дивизии: значок только там, где есть полевая армия (гарнизон 1 не рисуется)
+  for (let i = 0; i < PROV.n; i++) {
+    const t = G.tiles[i];
+    if (t.o < 0 || t.a < 2 || !pv(PROV.cx[i], PROV.cy[i])) continue;
+    drawToken(PROV.cx[i], PROV.cy[i], t.a, G.players[t.o].color, (i * 7 + 3) % 3, sc, i === sel);
+  }
+  // 9. дивизии в движении по путям сообщения (линии маршрутов — одним путём; при толпе чужие линии не рисуем)
+  const gt = curGT(), many = G.marches.length > 120, mp = new Path2D(), movers = [];
+  for (const m of G.marches) {
+    const k = Math.max(0, Math.min(1, (gt - m.t0) / m.dur));
+    const x0 = PROV.cx[m.path[m.s]], y0 = PROV.cy[m.path[m.s]], x1 = PROV.cx[m.path[m.s + 1]], y1 = PROV.cy[m.path[m.s + 1]];
+    const x = x0 + (x1 - x0) * k, y = y0 + (y1 - y0) * k;
+    if (!pv(x, y)) continue;
+    movers.push([x, y, m]);
+    if (!many || m.p === G.me) {
+      mp.moveTo(x, y);
+      for (let j = m.s + 1; j < m.path.length; j++) mp.lineTo(PROV.cx[m.path[j]], PROV.cy[m.path[j]]);
+    }
+  }
+  ctx.lineWidth = 3.5; ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.stroke(mp);
+  ctx.lineWidth = 1.8; ctx.strokeStyle = 'rgba(244,241,230,.9)'; ctx.stroke(mp);
+  for (const [x, y, m] of movers) drawToken(x, y, m.n, G.players[m.p].color, m.id % 3, sc, false);
+  // 10. подсказка по провинции (гарнизоны на карте цифрами не показаны)
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  if (hover >= 0 && !ptrs.size) {
+    const t = G.tiles[hover], dm = defI(hover);
+    let l1 = t.t >= 4 ? TER[t.t].n : TER[t.t].n + ' · ' + (t.o >= 0 ? G.players[t.o].name : 'ничья земля');
+    if (t.o >= 0 && t.t < 4 && hover === PROV.cap[t.o]) l1 = '★ ' + (G.players[t.o].capital || 'Столица') + ' · ' + l1;
+    const l2 = t.t >= 4 ? 'Непроходимо без флота' : 'Гарнизон: ' + t.a + ' · оборона ×' + String(+dm.toFixed(2));
+    ctx.font = '13px sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    const w = Math.max(ctx.measureText(l1).width, ctx.measureText(l2).width) + 20;
+    const bx = Math.max(4, Math.min(mouse.x + 16, view.w - w - 6)), by = Math.max(4, Math.min(mouse.y + 18, view.h - 50));
+    ctx.fillStyle = 'rgba(14,17,24,.92)'; ctx.fillRect(bx, by, w, 44);
+    ctx.strokeStyle = '#3a4152'; ctx.lineWidth = 1; ctx.strokeRect(bx, by, w, 44);
+    ctx.fillStyle = '#f0ede2'; ctx.fillText(l1, bx + 10, by + 14);
+    ctx.fillStyle = '#b8bfce'; ctx.fillText(l2, bx + 10, by + 31);
+  }
+}
+function setLog(t) { addLog(t); }
+let hudKey = '';
+function refresh() {
+  if (!G) return;
+  invalidate();
+  const cnt = [0, 0], arm = [0, 0];
+  G.tiles.forEach(x => { if (x.o >= 0) { cnt[x.o]++; arm[x.o] += x.a; } });
+  G.marches.forEach(m => { arm[m.p] += m.n; });
+  const key = cnt.join() + '|' + arm.join() + '|' + G.logs.slice(-3).join('\n');
+  if (key === hudKey) return;
+  hudKey = key;
+  const hud = $('hud'); hud.innerHTML = '';
+  G.players.forEach((p, i) => {
+    const d = document.createElement('div'); d.className = 'pc'; d.style.borderLeft = '8px solid ' + p.color;
+    const f = document.createElement('canvas'); f.className = 'fl'; f.width = 72; f.height = 48; drawFlag(f, cleanFlag(p.flag));
+    const info = document.createElement('div');
+    const b = document.createElement('b'); b.textContent = p.name + (i === G.me ? ' (вы)' : '');
+    const s1 = document.createElement('small'); s1.textContent = p.title + ' ' + p.leader;
+    const s2 = document.createElement('small'); s2.textContent = IDEO[p.ideo].name + ' · ' + REL[p.rel | 0].short + ' · провинций: ' + cnt[i] + ' · армия: ' + arm[i];
+    const s3 = document.createElement('small'); s3.textContent = '★ Столица: ' + (p.capital || '—');
+    info.append(b, s1, s2, s3); d.append(f);
+    if (p.photo) { const im = new Image(); im.src = p.photo; im.className = 'lp'; d.append(im); }
+    d.append(info); hud.appendChild(d);
+  });
+  $('log').textContent = G.logs.slice(-3).join('\n');
+}
+let lastClock = '', lastSpd = '';
+function updateClock() {
+  const d = new Date(Date.UTC(1936, 0, 1) + Math.floor(curGT()) * 864e5);
+  let txt = d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+  txt += G.paused ? ' · ПАУЗА' : ' · ×' + SPEEDS[G.speed];
+  txt += ' · подкрепление через ' + Math.max(0, Math.ceil(G.nextReinf - curGT())) + ' дн.';
+  if (G.flash && performance.now() < G.flashUntil) txt += ' · ' + G.flash;
+  if (txt !== lastClock) { $('turn').textContent = txt; lastClock = txt; }
+  const sk = G.paused + ',' + G.speed;
+  if (sk !== lastSpd) {
+    lastSpd = sk; $('bPause').textContent = G.paused ? '▶' : '⏸';
+    document.querySelectorAll('.sp').forEach((b, i) => b.classList.toggle('on', i === G.speed && !G.paused));
+  }
+}
+let lastLoop = performance.now();
+function loop() {
+  if (!G) return;
+  const now = performance.now(), dt = Math.min(0.05, (now - lastLoop) / 1000); lastLoop = now;
+  let dx = 0, dy = 0;   // WASD/стрелки, у края экрана — в полноэкранном режиме
+  if (keys.has('KeyA') || keys.has('ArrowLeft')) dx++;
+  if (keys.has('KeyD') || keys.has('ArrowRight')) dx--;
+  if (keys.has('KeyW') || keys.has('ArrowUp')) dy++;
+  if (keys.has('KeyS') || keys.has('ArrowDown')) dy--;
+  if (document.fullscreenElement && mouse.in && !ptrs.size) {
+    if (mouse.x < 6) dx++; if (mouse.x > view.w - 6) dx--;
+    if (mouse.y < 6) dy++; if (mouse.y > view.h - 6) dy--;
+  }
+  if (dx || dy) { cam.x += dx * 700 * dt; cam.y += dy * 700 * dt; clampCam(); invalidate(); }
+  if (sel >= 0 && (G.tiles[sel].o !== G.me || G.tiles[sel].a < 2)) { sel = -1; invalidate(); }
+  updateClock();
+  if (dirty || (G.marches.length && !G.paused && G.winner === -1)) { dirty = false; draw(); }
+  requestAnimationFrame(loop);
+}
+function showOver(t) { $('overTxt').textContent = t; $('over').style.display = 'flex'; }
+function showWinner() {
+  if (G.shown) return; G.shown = true;
+  const w = G.players[G.winner];
+  showOver(G.winner === G.me ? 'Победа! ' + w.title + ' ' + w.leader + ' покорил всех!' : 'Поражение. ' + w.name + ' одержала победу.');
+}
+function startGame() {
+  $('menu').style.display = 'none'; $('game').style.display = 'block';
+  buildRelief(); buildBase();
+  resizeView(); focusTile(capital(G.me), 1.6); refresh();
+  if (isHost) {
+    let last = performance.now();
+    setInterval(() => {
+      const n = performance.now(); simulate(Math.min((n - last) / 1000, 2)); last = n;
+      if (bot && G.winner === -1 && !G.paused && G.gt >= bot.next) { botThink(); bot.next = G.gt + [4, 2.5, 1.5][bot.level]; }
+      if (G.winner === -1 && G.gt - G.lastSave >= 10) { G.lastSave = G.gt; saveGame(); }   // автосохранение каждые 10 игровых дней
+      if (G.winner >= 0 && !G.shown) { clearSave(); send(snapshot()); refresh(); showWinner(); }
+    }, 50);
+    setInterval(() => { send(snapshot()); refresh(); }, 250);
+  }
+  requestAnimationFrame(loop);
+}
+
+/* ====== БОТ ====== */
+let bot = null;
+const BOTS = [['Новая Эрландия', 'Канцлер', 'Густав'], ['Волчья Марка', 'Герцог', 'Рагнар'], ['Республика Альвира', 'Президент', 'Мария'],
+  ['Северный Союз', 'Председатель', 'Олег'], ['Империя Каэрон', 'Император', 'Валериан'], ['Вольные Земли', 'Консул', 'Тиберий']];
+function startBot() {
+  if (starting) return; starting = true;
+  myCountry = readCountry(); isHost = true; conn = null;
+  const lvl = +$('botLvl').value, c = BOTS[Math.floor(Math.random() * BOTS.length)];
+  const pick = () => PAL[Math.floor(Math.random() * PAL.length)];
+  let c1 = pick(), c2 = pick(); while (c2 === c1) c2 = pick();
+  const botC = {
+    name: c[0], title: c[1], leader: c[2], ideo: Math.floor(Math.random() * IDEO.length), rel: Math.floor(Math.random() * REL.length), capital: c[2] + 'град', color: farColor(myCountry.color),
+    flag: { pat: Math.floor(Math.random() * PATS.length), em: Math.floor(Math.random() * EMS.length), c1, c2, c3: pick() }
+  };
+  withLoading(() => {
+    G = newGame(genMap(Math.floor(Math.random() * 2147483647)), [myCountry, botC], 0);
+    bot = { level: lvl, next: 3 };
+    addLog('Противник: ' + botC.name + ' (' + IDEO[botC.ideo].name + '). Время идёт — отдавайте приказы.');
+    startGame();
+  });
+}
+function isFront(p, i) { return neighbors(i).some(k => G.tiles[k].o !== p && G.tiles[k].t < 4); }
+function nearestFront(p, from) {
+  const seen = new Set([from]), q = [from];
+  let qi = 0;
+  while (qi < q.length) {
+    const c = q[qi++];
+    for (const n of neighbors(c)) {
+      if (seen.has(n) || G.tiles[n].o !== p) continue;
+      if (isFront(p, n)) return n;
+      seen.add(n); q.push(n);
+    }
+  }
+  return -1;
+}
+function botThink() {
+  const p = 1, lv = bot.level, margin = [1.35, 1.15, 1.05][lv], K0 = [1, 2, 4][lv];
+  let K = K0;
+  let mine = 0; for (const m of G.marches) if (m.p === p) mine++;
+  if (mine > 120) return;   // не засыпаем карту маршами
+  const src = [];
+  G.tiles.forEach((t, i) => { if (t.o === p && t.a >= 2) src.push(i); });
+  src.sort(() => Math.random() - 0.5);
+  K = K0 * Math.min(6, Math.max(1, Math.round(src.length / 40)));
+  let acts = 0;
+  for (const i of src) {
+    if (acts >= K) break;
+    const f = G.tiles[i];
+    if (f.o !== p || f.a < 2) continue;
+    const n = f.a - 1;
+    let best = -1, bs = -1e9, front = false;
+    for (const j of neighbors(i)) {
+      const t = G.tiles[j];
+      if (t.o === p || t.t >= 4) continue;
+      front = true;
+      const dm = defI(j);
+      if (n * atkI(p) <= t.a * dm * margin) continue;
+      const sc = (t.o >= 0 ? 3 : 1) + (t.t === 3 ? 2 : 0) - t.a * dm * 0.2 - (lv ? PROV.cx[j] / 60 * 0.15 : 0);
+      if (sc > bs) { bs = sc; best = j; }
+    }
+    if (best >= 0) { if (cmdMove(p, i, best)) acts++; continue; }
+    let dest = -1;
+    if (front) {   // нет выгодной атаки: стягиваем силы в более сильный соседний гекс на фронте
+      let ba = f.a;
+      for (const j of neighbors(i)) { const t = G.tiles[j]; if (t.o === p && t.a > ba && isFront(p, j)) { ba = t.a; dest = j; } }
+    } else dest = nearestFront(p, i);
+    if (dest >= 0 && cmdMove(p, i, dest)) acts++;
+  }
+}
+
+/* ====== СОХРАНЕНИЕ / ЗАГРУЗКА ====== */
+function fmtDate(gt) { return new Date(Date.UTC(1936, 0, 1) + Math.floor(gt) * 864e5).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }); }
+function saveGame() {
+  if (!G || !isHost || G.winner !== -1) return;   // сохраняет тот, кто считает игру: одиночная игра и хост
+  gameState.game = {
+    mode: bot ? 'bot' : 'host', seed: SEED, caps: PROV.cap.slice(),
+    t: G.tiles.map(x => x.t), o: G.tiles.map(x => x.o), a: G.tiles.map(x => x.a),
+    opponent: G.players[1], gt: G.gt, speed: G.speed, paused: G.paused, nextReinf: G.nextReinf, nextId: G.nextId,
+    marches: G.marches, logs: G.logs, bot: bot ? { level: bot.level, next: bot.next } : null
+  };
+  try {
+    localStorage.setItem('empire_save_v1', JSON.stringify(gameState));
+    $('saveInfo').textContent = 'Последнее автосохранение: ' + fmtDate(G.gt);
+  } catch (err) {
+    console.warn('Автосохранение не удалось:', err);
+    $('saveInfo').textContent = 'Автосохранение не удалось (хранилище браузера недоступно или переполнено).';
+  }
+}
+function clearSave() { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+function resetSave() {
+  if (!confirm('Удалить сохранение и начать новую игру?')) return;
+  localStorage.removeItem('empire_save_v1');
+  location.reload();
+}
+// проверка и «очистка» страны игрока из сохранения
+function normalizeCountry(c) {
+  c = c || {};
+  const d = defaultCountry(), str = (v, n) => typeof v === 'string' ? v.slice(0, n) : '';
+  const photo = v => (typeof v === 'string' && v.length < 150000 && /^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(v)) ? v : null;
+  return {
+    name: str(c.name, 28), title: str(c.title, 24), leader: str(c.leader, 28), capital: str(c.capital, 28),
+    ideo: Math.max(0, Math.min(IDEO.length - 1, c.ideo | 0)), rel: Math.max(0, Math.min(REL.length - 1, c.rel | 0)),
+    color: (typeof c.color === 'string' && /^#[0-9a-f]{6}$/i.test(c.color)) ? c.color.toLowerCase() : d.color,
+    photo: photo(c.photo),
+    generals: d.generals.map((g, i) => {
+      const s0 = (Array.isArray(c.generals) && c.generals[i]) || {};
+      return { role: g.role, cls: g.cls === null ? null : Math.max(0, Math.min(2, s0.cls | 0)), name: str(s0.name, 28), photo: photo(s0.photo) };
+    }),
+    flag: cleanFlag(c.flag)
+  };
+}
+function restoreGame(g) {
+  const n = NX * NY, cl = (v, lo, hi) => Math.max(lo, Math.min(hi, v | 0));
+  if (!g || !Array.isArray(g.t) || !Array.isArray(g.o) || !Array.isArray(g.a) || g.t.length !== n || g.o.length !== n || g.a.length !== n) throw new Error('размер карты не совпадает');
+  buildGeometry(g.seed >>> 0);
+  if (Array.isArray(g.caps) && g.caps.length === 2 && g.caps.every(v => Number.isInteger(v) && v >= 0 && v < n)) PROV.cap = g.caps.slice();
+  const tiles = g.t.map((t, i) => ({ t: cl(t, 0, 5), o: cl(g.o[i], -1, 1), a: cl(g.a[i], 0, CAP) }));
+  myCountry = readCountry(); isHost = true; conn = null;
+  G = newGame(tiles, [myCountry, cleanCountry(g.opponent)], 0);
+  G.gt = isFinite(g.gt) ? Math.max(0, +g.gt) : 0;
+  G.speed = cl(g.speed, 0, SPEEDS.length - 1);
+  G.paused = true;   // после загрузки игра стоит на паузе
+  G.nextId = Math.max(1, g.nextId | 0);
+  G.nextReinf = isFinite(g.nextReinf) ? +g.nextReinf : G.gt + REINF;
+  G.marches = (Array.isArray(g.marches) ? g.marches : []).filter(m => m && Array.isArray(m.path) && m.path.length >= 2 &&
+    m.path.every(k => Number.isInteger(k) && k >= 0 && k < n) && (m.p === 0 || m.p === 1) && Number.isInteger(m.s) && m.s >= 0 &&
+    m.s + 1 < m.path.length && isFinite(m.t0) && isFinite(m.dur) && m.n >= 1)
+    .map(m => ({ id: m.id | 0, p: m.p, n: m.n | 0, path: m.path, s: m.s, t0: +m.t0, dur: +m.dur }));
+  G.logs = Array.isArray(g.logs) ? g.logs.slice(-6).map(x => String(x).slice(0, 200)) : [];
+  G.lastSave = G.gt;
+  bot = { level: g.bot ? cl(g.bot.level, 0, 2) : 1, next: G.gt + 3 };
+  addLog(g.mode === 'host' ? 'Игра загружена из сохранения. Соперник отключён — его страной управляет бот. Пробел — продолжить.' : 'Игра загружена из сохранения. Пробел — продолжить.');
+  startGame();
+}
+// внутриигровое меню: продолжить или сбросить сохранение
+let menuPaused = false;
+$('bMenu').onclick = () => {
+  $('pauseMenu').style.display = 'flex';
+  if (isHost && bot && G && !G.paused) { setSpeed(G.speed, true); menuPaused = true; }   // в одиночной игре ставим на паузу
+};
+$('btnContinue').onclick = () => {
+  $('pauseMenu').style.display = 'none';
+  if (menuPaused) { menuPaused = false; setSpeed(G.speed, false); }
+};
+$('btnReset').onclick = resetSave;
+$('btnReset2').onclick = resetSave;
+
+/* ====== КНОПКИ ====== */
+$('btnCreate').onclick = () => createLobby(0);
+$('btnJoin').onclick = joinLobby;
+$('btnBot').onclick = startBot;
+$('btnCopy').onclick = () => {
+  const el = $('myId'); el.select();
+  try { navigator.clipboard.writeText(el.value).catch(() => document.execCommand('copy')); } catch (e) { document.execCommand('copy'); }
+  $('btnCopy').textContent = 'ОК'; setTimeout(() => $('btnCopy').textContent = 'Копия', 1200);
+};
+
+// при открытии страницы: если есть сохранение — сразу открываем карту, пропуская главное меню
+(function boot() {
+  let raw = null;
+  try { raw = localStorage.getItem('empire_save_v1'); } catch (e) {}
+  if (!raw) return;
+  try {
+    const st = JSON.parse(raw);
+    if (!st || st.version !== 1 || !st.country || !st.game) throw new Error('неизвестный формат');
+    gameState.country = normalizeCountry(st.country);
+    gameState.game = st.game;
+    fillUI(gameState.country);
+    starting = true;
+    withLoading(() => {
+      try { restoreGame(st.game); }
+      catch (err) {   // испорченное сохранение откладываем в резерв, чтобы не падать при каждом запуске
+        try { localStorage.setItem(SAVE_KEY + '_broken', raw); localStorage.removeItem(SAVE_KEY); } catch (e) {}
+        throw err;
+      }
+    });
+  } catch (err) {
+    console.error(err);
+    try { localStorage.setItem(SAVE_KEY + '_broken', raw); localStorage.removeItem(SAVE_KEY); } catch (e) {}
+    status('Сохранение повреждено и убрано в резерв: ' + err.message);
+  }
+})();
+</script>
+</body>
+</html>
